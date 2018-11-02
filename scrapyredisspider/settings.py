@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for scrapyredisspider project
+# Scrapy settings for scrapyspider project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,52 +9,57 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'scrapyredisspider'
+BOT_NAME = 'scrapyspider'
 
-SPIDER_MODULES = ['scrapyredisspider.spiders']
-NEWSPIDER_MODULE = 'scrapyredisspider.spiders'
+SPIDER_MODULES = ['scrapyspider.spiders']
+NEWSPIDER_MODULE = 'scrapyspider.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'scrapyredisspider (+http://www.yourdomain.com)'
+#USER_AGENT = 'scrapyspider (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 16
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 3  # 下载延迟：下载下一个页面时需要等待的时间
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+# 有些网站会追踪cookie值做反爬虫,通常可以禁掉,必须登录才能访问的网站可以在**spider类中添加custom_settings = {"COOKIES_ENABLED": True}
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-#}
+DEFAULT_REQUEST_HEADERS = {
+  'User-Agent': 'Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; en) Presto/2.8.131 Version/11.11',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en',
+}
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'scrapyredisspider.middlewares.ScrapyredisspiderSpiderMiddleware': 543,
+#    'scrapyspider.middlewares.ScrapyspiderSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'scrapyredisspider.middlewares.ScrapyredisspiderDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   # 'scrapyspider.middlewares.ScrapyspiderDownloaderMiddleware': 543,
+   'scrapyspider.middlewares.RandomUserAgent': 100,
+   'scrapyspider.middlewares.RandomProxy': 200,
+   # 'scrapyspider.middlewares.SeleniumMiddleware': 300,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
@@ -64,9 +69,15 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'scrapyredisspider.pipelines.ScrapyredisspiderPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   # 'scrapyspider.pipelines.ItcastPipeline': 300,
+   # 'scrapyspider.pipelines.TencentspiderPipeline': 300,
+   # 'scrapyspider.pipelines.SunwzspiderPipeline': 300,
+   # 'scrapyspider.pipelines.JianshuspiderPipeline': 300,
+   # 'scrapyspider.pipelines.JianshuTwistedspiderPipline': 300,
+   # 'scrapyspider.pipelines.SoyoungspiderPipeline': 300,
+   'scrapyspider.pipelines.ScrapyspiderPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
