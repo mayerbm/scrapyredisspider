@@ -6,6 +6,7 @@ from scrapy.utils.misc import load_object
 from . import connection, defaults
 
 
+# 调度配置，把请求对象存储到Redis数据, 从而实现请求的持久化
 # TODO: add SCRAPY_JOB support.
 class Scheduler(object):
     """Redis-based scheduler
@@ -143,23 +144,34 @@ class Scheduler(object):
             spider.log("Resuming crawl (%d requests scheduled)" % len(self.queue))
 
     def close(self, reason):
-        if not self.persist:
+        # 如果不持久化就调用flush
+        if not self.persist:  # SCHEDULER_PERSIST = True
             self.flush()
 
     def flush(self):
+        # 清空指纹容器: 清空Redis中存储指纹的set集合
         self.df.clear()
+        # 清空请求队列: 请求Redis中存储请求对象二进制数据的zset集合
         self.queue.clear()
 
     def enqueue_request(self, request):
+        """把引擎交给调度器的请求, 存储到Redis数据库中"""
+        #  如果请求是过滤的 并且 该请求重复; 也就是在去重容器中已经有这个请求了
         if not request.dont_filter and self.df.request_seen(request):
+            # 记录去重日志, 然后就结束了,return false表示没有入队
             self.df.log(request, self.spider)
             return False
+        # 走到下一步的两个条件, 只要满足其中一个即可
+        # 1. 如果请求不过滤就直接进来了，入队
+        # 2. 如果请求需要去重, 但是它是一个全新请求
         if self.stats:
             self.stats.inc_value('scheduler/enqueued/redis', spider=self.spider)
+        # 把请求对象入队
         self.queue.push(request)
         return True
 
     def next_request(self):
+        """redis的请求队列中取出一个请求对象: Request对象"""
         block_pop_timeout = self.idle_before_close
         request = self.queue.pop(block_pop_timeout)
         if request and self.stats:

@@ -1,28 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-需求：抓取房天下网站各个城市的新房和二手房房价信息
-思路：
-1、先获取所有城市链接
-http://www.fang.com/SoufunFamily.htm
-2、再获取每个城市新房/二手房链接
-上海：http://sh.fang.com/
-     http://sh.newhouse.fang.com/house/s/
-     http://sh.esf.fang.com/
-无锡：http://wuxi.fang.com/
-     http://wuxi.newhouse.fang.com/house/s/
-     http://wuxi.esf.fang.com/
-北京：http://bj.fang.com/
-     http://newhouse.fang.com/house/s/
-     http://esf.fang.com/
-
-在linux部署工程：
-pip freeze > requirements.txt
-在virtualenv安装环境：pip install requirements.txt
-
-问题：xpath()获取不到数据,返回的是空[]
-原因：Scrapy爬虫看到的页面结构与我们自己在浏览器看到的可能并不一样(比如某个页面元素的id或者class不一样,甚至元素名字也不一样)
-解决：使用scrapy shell测试 --> 通过view(response)命令来看看scrapy爬虫所看到的页面具体长啥样(可以在弹出的浏览器中检查元素)
-"""
 
 import scrapy
 import re
@@ -31,18 +7,19 @@ from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
 from scrapyredisspider.utils.common import get_md5
 from scrapyredisspider.items import MyItemLoader
+from scrapy_redis.spiders import RedisSpider
 
 
-class scrapyredisspider(scrapy.Spider):
+class scrapyredisspider(RedisSpider):
     # 爬虫名称
     name = 'soufang'
     # 域名范围
     allowed_domains = ['fang.com']
     # 起始页面
-    start_urls = ['http://www.fang.com/SoufunFamily.htm']
+    # start_urls = ['http://www.fang.com/SoufunFamily.htm']
 
-    # 设置redis_key
-    redis_key = "..."
+    # 设置redis_key：启动所有slaver端爬虫的指令,scrapy-redis将key从redis里pop出来成为请求的url地址
+    redis_key = "scrapyredisspider:start_urls"
 
     # scrapy默认只处理200<=response.status<300的url;现在想统计404页面数量,将404添加到http状态码请求列表
     handle_httpstatus_list = [404]  # 见源码-->scrapy.spidermiddlewares.httperror
@@ -101,8 +78,8 @@ class scrapyredisspider(scrapy.Spider):
                 # 发送新的请求链接(meta参数用于在不同请求之间传递数据,dict类型)
                 yield scrapy.Request(url=new_link, callback=self.parse_new, meta={"info": (province, city)})
                 # yield scrapy.Request(url=esf_link, callback=self.parse_esf, meta={"info": (province, city)})
-                # break
-            # break
+                break
+            break
 
     # 解析新房数据
     def parse_new(self, response):

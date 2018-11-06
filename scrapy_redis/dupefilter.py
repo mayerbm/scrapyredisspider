@@ -11,6 +11,7 @@ from .connection import get_redis_from_settings
 logger = logging.getLogger(__name__)
 
 
+# 去重容器类配置，使用Redis的set集合来存储请求的指纹数据, 从而实现请求去重的持久化
 # TODO: Rename class to RedisDupeFilter.
 class RFPDupeFilter(BaseDupeFilter):
     """Redis-based request duplicates filter.
@@ -95,9 +96,15 @@ class RFPDupeFilter(BaseDupeFilter):
         bool
 
         """
+
+        # 根据Request对象, 生成一个请求的指纹字符串
         fp = self.request_fingerprint(request)
         # This returns the number of values added, zero if already exists.
+        # 向redis的用于存储请求指纹的set集合中添加该请求对应的指纹
+        # 如果添加成功了就返回一个大于0数, 添加失败了就返回0
         added = self.server.sadd(self.key, fp)
+        # 如果added == 0就说明添加失败了, 也就是当set集合已经有这个数据了才会添加失败
+        # 也就是这个请求已经请求过了(即重复了)), 此时就返回True, 否则就返回False
         return added == 0
 
     def request_fingerprint(self, request):

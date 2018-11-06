@@ -8,6 +8,7 @@ from . import connection, defaults
 default_serialize = ScrapyJSONEncoder().encode
 
 
+# 把爬虫爬取的数据存储到Redis数据库中,以list形式
 class RedisPipeline(object):
     """Pushes serialized item into a redis list/queue
 
@@ -58,11 +59,16 @@ class RedisPipeline(object):
         return cls.from_settings(crawler.settings)
 
     def process_item(self, item, spider):
+        # 把_process_item的任务分发到线程中完成.
         return deferToThread(self._process_item, item, spider)
 
     def _process_item(self, item, spider):
+        # 根据爬虫名称生成一个key，存储到Redis数据库中。
+        # 格式: 爬虫名称:items
         key = self.item_key(item, spider)
+        # 把 item 序列化为 json格式的数据
         data = self.serialize(item)
+        # 把数据存储到Redis队列中
         self.server.rpush(key, data)
         return item
 
